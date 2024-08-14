@@ -21,27 +21,31 @@
 global logFile
 global scriptPath
 
+-- Parsed Arguments
+global argDetectLanguage 
+global argLanguage
+global argLanguageCorrection
+global imageFile
+
 use framework "Foundation"
 use framework "Vision"
 use scripting additions
 
 -- run: Process an image file and write the recognized text to a text file.
 -- Parameters:
---   input (alias) - The file path of the image to process. (Quoted form)
+--   args (alias) - The file path of the image to process. (Quoted form)
 -- Returns: Nothing.
-on run input
-    if input is missing value or input is {} or item 1 of input is "-h" or item 1 of input is "--help" then
-        printHelp()
+on run args
+    if not init(args) then
         return
     end if
 
-    init()
-    log("INFO", "Processing image: " & input)
-    set imageFile to POSIX path of input
+    -- log("INFO", "Processing image: " & args)
+    -- set imageFile to POSIX path of args
     set theText to getText(imageFile)
 
     if theText is "" then
-        log("WARN", "No text recognized in image: " & input)
+        log("WARN", "No text recognized in image: " & args)
         return
     else
         set resultFile to getResultFileName(imageFile, ".txt")
@@ -52,12 +56,61 @@ end run
 -- init: Initialize the script log file.
 -- Parameters: None.
 -- Returns: Nothing.
-to init()
+to init(args)
    set scriptPath to (path to me)
    set scriptPath to do shell script "dirname " & quoted form of POSIX path of scriptPath
    set logFile to (name of me)
    set logFile to do shell script "basename " & quoted form of logFile & "_log.txt"
    set logFile to scriptPath & "/" & logFile
+
+    set argDetectLanguage to false
+    set argLanguage to "en"
+    set argLanguageCorrection to false
+    set imageFile to missing value
+
+    if args is missing value or args is {} then
+        printHelp()
+        return false
+    end if
+        repeat with i from 1 to count of args
+            set thisArg to item i of args
+            -- display dialog quoted form of thisArg
+            if thisArg is "-h" or thisArg is "--help" then
+                printHelp()
+                return false
+            else if thisArg is "-d" or thisArg is "--detect-language" then
+                set argDetectLanguage to true
+            else if thisArg is "-l" or thisArg is "--language" then
+                set argLanguage to item (i + 1) of args
+            else if thisArg is "-c" or thisArg is "--language-correction" then
+                set argLanguageCorrection to true
+            else if thisArg is not missing value and thisArg does not start with "-" then
+                try
+                    set imageFile to POSIX path of thisArg
+                on error
+                    log("ERROR", "Invalid image file: " & thisArg)
+                end try
+            end if
+        end repeat
+
+   if imageFile is missing value then
+      log("ERROR", "No image file specified.")
+      return false
+   end if
+
+   if argDetectLanguage is true then
+      log("INFO", "Detecting language enabled.")
+   end if
+
+    if argLanguage is not missing value then
+        log("INFO", "Language: " & argLanguage)
+    end if
+
+    if argLanguageCorrection is true then
+        log("INFO", "Language correction enabled.")
+    end if
+
+    return true
 end init
 
 on printHelp()
@@ -65,7 +118,13 @@ on printHelp()
 The recognized text is written to a text file with the same name as the image file but with a .txt extension.
 
 Usage:
-osascript /path/process_image.scpt \"/the/image.png\"
+osascript /path/process_image.scpt \"/my/image.png\"
+
+Flags:
+-h, --help: Display this help message.
+-d, --detect-language: Automatically detect the language. Default is disabled.
+-l, --language ISO 639-1 string: Enable language correction. Default is disabled. Default is 'en'.
+-c, --language-correction: Enable language correction. Default is disabled.
     "
     display dialog h with title "Help" buttons {"OK"} default button "OK"
 end printHelp
@@ -104,21 +163,23 @@ on getText(imageFile)
     try
         set imageFileURL to current application's NSURL's fileURLWithPath:(POSIX path of imageFile)
         set requestHandler to current application's VNImageRequestHandler's alloc()'s initWithURL:imageFileURL options:(missing value)
-        
+
         set theRequest to current application's VNRecognizeTextRequest's alloc()'s init()
-        theRequest's setAutomaticallyDetectsLanguage:true
-        theRequest's setUsesLanguageCorrection:false
-        
+        theRequest's setAutomaticallyDetectsLanguage:argDetectLanguage
+        theRequest's setUsesLanguageCorrection:argLanguageCorrection
+        if argLanguage is not missing value then
+            theRequest's setRecognitionLanguages:{argLanguage}
+        end if
         set success to requestHandler's performRequests:(current application's NSArray's arrayWithObject:(theRequest)) |error|:(missing value)
         if success as boolean is false then error "Failed to perform text recognition."
-        
+
         set theResults to theRequest's results()
         set theArray to current application's NSMutableArray's new()
-        
+
         repeat with aResult in theResults
             (theArray's addObject:(((aResult's topCandidates:1)'s objectAtIndex:0)'s |string|()))
         end repeat
-        
+
         return (theArray's componentsJoinedByString:linefeed) as Unicode text
     on error errMsg number errNum
         log("ERROR", "Error in getText: " & errMsg & " (" & errNum & ") - " & imageFile)
@@ -154,10 +215,11 @@ on log(type, message)
     try
         set logTimestamp to do shell script "date +'%Y-%m-%d %H:%M:%S'"
         set logMessage to logTimestamp & " [" & type & "] " & message & linefeed
+        do shell script "echo " & quoted form of logMessage
         set the logDescriptor to open for access logFile with write permission
         write logMessage to the logDescriptor starting at eof
         close access the logDescriptor
-    on error 
+    on error
         try
             close access file logFile
         end try
