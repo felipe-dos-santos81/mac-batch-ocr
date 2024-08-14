@@ -3,9 +3,17 @@
     Used to process an image file and writing the recognized text to a text file.
     The recognized text is written to a text file with the same name as the image file but with a .txt extension.
     The script uses the Vision framework to recognize text in the image.
+
     Usage:
-      Single image: osascript /path/to/script/process_image.scpt "/base/path/to/the/image.png"
-      Multiple images: find /base/path/to/the/images \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -type f -exec osascript /path/to/script/process_image.scpt "{}" \;
+      Help:
+        osascript /my/script/process_image.scpt --help
+
+      Single image: 
+        osascript /my/script/process_image.scpt "/my/images/image.png"
+        
+      Multiple images: 
+        find /my/images \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -type f -exec \
+            bash -c 'p="$(realpath "{}")"; [[ ! "$p" =~ ^\./ ]] && osascript /my/script/process_image.scpt "{}" \;
     
     2024 felipe.dos.santos
 *)
