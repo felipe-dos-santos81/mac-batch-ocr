@@ -1,4 +1,4 @@
-# Bach OCR on macOS
+# Batch Processing of Images to do OCR on macOS
 
 Apple Script used as a helper to process an image file and writing the recognized text to a text file.
 The recognized text is written to a text file with the same name as the image file but with a .txt extension.
