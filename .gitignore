@@ -7,6 +7,8 @@ __pycache__/
 *.so
 
 *.log
+process_image_log.txt
+.idea/
 
 # Distribution / packaging
 .Python

@@ -6,7 +6,8 @@ The recognized text is written to a text file with the same name as the image fi
 The script uses the Vision framework to recognize text in the image.
 
 > IMPORTANT: This script runs only on macOS 10.13+ <br>
-> Tested on macOS Sonoma 14.6+
+> Tested on macOS Sonoma 14.6+ <br>
+> _Script inspired by [this](https://www.macscripter.net/t/image-png-to-text-through-applescript/74490/27) thread_ <br>
 
 ##	Legal Disclaimer
 
@@ -27,6 +28,20 @@ All other trademarks and service marks are the property of their respective owne
 
 ```shell
 osascript /my/script/process_image.scpt --help
+```
+
+```
+Used to process an image file and writing the recognized text to a text file.
+The recognized text is written to a text file with the same name as the image file but with a .txt extension.
+
+Usage:
+osascript /path/process_image.scpt "/my/image.png"
+
+Flags:
+-h, --help: Display this help message.
+-d, --detect-language: Automatically detect the language. Default is disabled.
+-l, --language ISO 639-1 string: Enable language correction. Default is disabled. Default is 'en'.
+-c, --language-correction: Enable language correction. Default is disabled.
 ```
 
 ### Single image
