@@ -54,7 +54,7 @@ osascript /my/script/process_image.scpt "/my/images/image.png"
 
 ```shell
 find /my/images \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -type f -exec \
-    bash -c 'p="$(realpath "{}")"; [[ ! "$p" =~ ^\./ ]] && osascript /my/script/process_image.scpt "{}" \;
+    bash -c 'p="$(realpath "{}")"; [[ ! "$p" =~ ^\./ ]] && osascript /my/script/process_image.scpt "$p" \;
 ```
 
 #### Where:
