@@ -15,6 +15,7 @@ BINARY := $(BUILD_DIR)/$(CONFIGURATION)/$(PROJECT_NAME)
 .PHONY: all build release test test-tsan clean install run help
 
 # Default target
+.DEFAULT_GOAL := help
 all: build
 
 # Build the project
@@ -51,7 +52,7 @@ help:
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Targets:"
-	@echo "  all       Build the project (default, debug configuration)"
+	@echo "  all       Build the project (debug configuration)"
 	@echo "  build     Build with CONFIGURATION (debug|release)"
 	@echo "  release   Build the optimized release binary"
 	@echo "  test      Run the test suite"

@@ -9,10 +9,12 @@ swift build -c release        # binary: .build/release/batch-ocr
 swift test                    # full suite (Swift Testing)
 swift test --filter <name>    # single test, e.g. --filter concurrencyIsCappedByJobs
 swift test --sanitize=thread  # required after touching BatchProcessor/concurrency
-make build|test|test-tsan|release|install|run|clean|help   # Makefile wrappers
+make build|test|test-tsan|release|install|run|clean|help   # Makefile wrappers; bare `make` prints help (default target)
 ```
 
 No CI and no lint/format toolchain configured.
+
+Use the tools available to you (like context7 MCP), and keep your answers clear and concise. When something is ambiguous, make a reasonable assumption and state it.
 
 ## Toolchain gotcha
 
