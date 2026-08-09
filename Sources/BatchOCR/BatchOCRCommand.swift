@@ -57,7 +57,7 @@ struct BatchOCRCommand: AsyncParsableCommand {
         if let dir = config.outputDir {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
-        let reporter = Reporter(quiet: quiet)
+        let reporter = Reporter(quiet: quiet, logFileURL: logFile.map { URL(fileURLWithPath: $0) })
         let processor = BatchProcessor(engine: VisionOCREngine(), config: config, reporter: reporter)
         let start = ContinuousClock.now
         let summary = await processor.run(files: files)

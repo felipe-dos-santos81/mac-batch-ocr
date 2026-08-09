@@ -37,10 +37,20 @@ struct BatchProcessor: Sendable {
 
     func run(files: [URL]) async -> BatchSummary {
         var summary = BatchSummary()
-        for (index, file) in files.enumerated() {
-            let result = await process(file)
-            summary.record(result)
-            reporter.progress(result, index: index + 1, count: files.count)
+        var pending = files.makeIterator()
+
+        await withTaskGroup(of: FileResult.self) { group in
+            for _ in 0..<max(config.jobs, 1) {
+                guard let file = pending.next() else { break }
+                group.addTask { await process(file) }
+            }
+            while let result = await group.next() {
+                summary.record(result)
+                reporter.progress(result, index: summary.total, count: files.count)
+                if let file = pending.next() {
+                    group.addTask { await process(file) }
+                }
+            }
         }
         return summary
     }

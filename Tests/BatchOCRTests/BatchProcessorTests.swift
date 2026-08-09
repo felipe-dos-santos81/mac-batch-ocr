@@ -127,3 +127,21 @@ private func makeFakeImages(count: Int) throws -> (dir: URL, files: [URL]) {
     #expect(summary.ok == 1)
     #expect(summary.failed == 1)
 }
+
+@Test func concurrencyIsCappedByJobs() async throws {
+    let (dir, files) = try makeFakeImages(count: 8)
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let tracker = InFlightTracker()
+    var config = OCRConfig()
+    config.jobs = 2
+    let processor = BatchProcessor(
+        engine: MockEngine(tracker: tracker, delay: .milliseconds(20)),
+        config: config,
+        reporter: Reporter(quiet: true)
+    )
+    let summary = await processor.run(files: files)
+    #expect(summary.ok == 8)
+    let peak = await tracker.peak
+    #expect(peak >= 1)
+    #expect(peak <= 2)
+}
