@@ -129,3 +129,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .DS_Store
+
+# Swift
+.build/
+.swiftpm/
+.agent/
+.superpowers/
