@@ -12,7 +12,7 @@ PROJECT_NAME := batch-ocr
 BINARY := $(BUILD_DIR)/$(CONFIGURATION)/$(PROJECT_NAME)
 
 # Phony targets
-.PHONY: all build release test lint clean install run help
+.PHONY: all build release test clean install run help
 
 # Default target
 all: build
@@ -28,11 +28,6 @@ release:
 # Run the test suite
 test:
 	$(SWIFT) test
-
-# Lint the code (requires SwiftLint: brew install swiftlint)
-lint:
-	@command -v swiftlint >/dev/null 2>&1 || { echo "swiftlint not installed (brew install swiftlint)"; exit 1; }
-	swiftlint lint --quiet
 
 # Clean build artifacts
 clean:
@@ -56,7 +51,6 @@ help:
 	@echo "  build     Build with CONFIGURATION (debug|release)"
 	@echo "  release   Build the optimized release binary"
 	@echo "  test      Run the test suite"
-	@echo "  lint      Run SwiftLint (must be installed)"
 	@echo "  clean     Remove build artifacts"
 	@echo "  install   Install the release binary to $(PREFIX)/bin"
 	@echo "  run       Run the CLI (ARGS=\"...\" to pass arguments)"
