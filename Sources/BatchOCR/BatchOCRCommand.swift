@@ -53,26 +53,27 @@ struct BatchOCRCommand: AsyncParsableCommand {
 
     mutating func run() async throws {
         let config = try makeConfig()
-        guard paths.count == 1 else {
-            throw configError("This milestone accepts exactly one image file; batch support lands in M3.")
-        }
-        let url = URL(fileURLWithPath: paths[0])
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
-            throw configError("Not an existing path: \(paths[0])")
-        }
-        guard !isDirectory.boolValue else {
-            throw configError("Directories are not supported yet (lands in M3): \(paths[0])")
-        }
+        let files = try discoverFiles(config: config)
         if let dir = config.outputDir {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
-        let text = try await VisionOCREngine().recognize(imageURL: url, config: config)
-        guard !text.isEmpty else {
-            FileHandle.standardError.write(Data("warn: no text recognized in \(url.path)\n".utf8))
-            return
+        let reporter = Reporter(quiet: quiet)
+        let processor = BatchProcessor(engine: VisionOCREngine(), config: config, reporter: reporter)
+        let start = ContinuousClock.now
+        let summary = await processor.run(files: files)
+        reporter.summary(summary, elapsed: ContinuousClock.now - start)
+        if summary.failed > 0 {
+            throw ExitCode(1)
         }
-        try text.write(to: OutputPath.forImage(url, outputDir: config.outputDir), atomically: true, encoding: .utf8)
+    }
+
+    private func discoverFiles(config: OCRConfig) throws -> [URL] {
+        do {
+            return try FileDiscovery.discover(paths: paths, recursive: config.recursive, extensions: config.extensions)
+        } catch let error as OCRError {
+            FileHandle.standardError.write(Data("Error: \(error)\n".utf8))
+            throw ExitCode(2)
+        }
     }
 
     func makeConfig() throws -> OCRConfig {
