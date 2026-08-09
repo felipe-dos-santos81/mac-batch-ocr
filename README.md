@@ -16,7 +16,8 @@ swift build -c release   # binary: .build/release/batch-ocr
 ```
 
 Makefile shortcuts: `make build`, `make test`, `make test-tsan`, `make release`,
-`make install`, `make run ARGS="--help"`, `make clean`, `make help`.
+`make install`, `make run ARGS="--help"`, `make clean`, `make help`. Bare
+`make` prints the target list (help is the default target).
 
 > `swift test` needs the Testing framework: full Xcode works out of the box;
 > Command-Line-Tools-only setups may need it symlinked into the CLT SDK.
