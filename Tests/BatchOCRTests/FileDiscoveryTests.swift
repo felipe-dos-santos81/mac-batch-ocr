@@ -40,13 +40,13 @@ private func makeTree() throws -> URL {
 @Test func missingPathThrows() {
     do {
         _ = try FileDiscovery.discover(paths: ["/no/such/path-\(UUID().uuidString)"], recursive: false, extensions: ["png"])
-        Issue.record("Expected OCRError.pathNotFound")
-    } catch let error as OCRError {
+        Issue.record("Expected DiscoveryError.pathNotFound")
+    } catch let error as DiscoveryError {
         guard case .pathNotFound = error else {
             Issue.record("Expected .pathNotFound, got \(error)")
             return
         }
     } catch {
-        Issue.record("Expected OCRError, got \(error)")
+        Issue.record("Expected DiscoveryError, got \(error)")
     }
 }

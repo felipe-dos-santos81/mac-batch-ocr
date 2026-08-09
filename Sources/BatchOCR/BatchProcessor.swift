@@ -32,6 +32,7 @@ struct BatchSummary: Sendable {
 
 struct BatchProcessor: Sendable {
     let engine: any OCREngine
+    let settings: RecognitionSettings
     let config: OCRConfig
     let reporter: Reporter
 
@@ -42,33 +43,16 @@ struct BatchProcessor: Sendable {
         await withTaskGroup(of: FileResult.self) { group in
             for _ in 0..<max(config.jobs, 1) {
                 guard let file = pending.next() else { break }
-                group.addTask { await process(file) }
+                group.addTask { await OCRJob(file: file, settings: settings, config: config, engine: engine).run() }
             }
             while let result = await group.next() {
                 summary.record(result)
                 reporter.progress(result, index: summary.total, count: files.count)
                 if let file = pending.next() {
-                    group.addTask { await process(file) }
+                    group.addTask { await OCRJob(file: file, settings: settings, config: config, engine: engine).run() }
                 }
             }
         }
         return summary
-    }
-
-    private func process(_ file: URL) async -> FileResult {
-        let output = OutputPath.forImage(file, outputDir: config.outputDir)
-        if !config.overwrite && OutputPath.hasExistingOutput(at: output) {
-            return FileResult(input: file, outcome: .skipped(output: output))
-        }
-        do {
-            let text = try await engine.recognize(imageURL: file, config: config)
-            guard !text.isEmpty else {
-                return FileResult(input: file, outcome: .empty)
-            }
-            try text.write(to: output, atomically: true, encoding: .utf8)
-            return FileResult(input: file, outcome: .ok(output: output))
-        } catch {
-            return FileResult(input: file, outcome: .failed(message: String(describing: error)))
-        }
     }
 }

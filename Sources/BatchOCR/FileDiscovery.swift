@@ -1,5 +1,16 @@
 import Foundation
 
+enum DiscoveryError: Error, CustomStringConvertible {
+    case pathNotFound(String)
+
+    var description: String {
+        switch self {
+        case .pathNotFound(let path):
+            "Path not found: \(path)"
+        }
+    }
+}
+
 enum FileDiscovery {
     static func discover(paths: [String], recursive: Bool, extensions: [String]) throws -> [URL] {
         let allowed = Set(extensions.map { $0.lowercased() })
@@ -18,7 +29,7 @@ enum FileDiscovery {
             let url = URL(fileURLWithPath: path)
             var isDirectory: ObjCBool = false
             guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
-                throw OCRError.pathNotFound(path)
+                throw DiscoveryError.pathNotFound(path)
             }
             if isDirectory.boolValue {
                 let candidates: [URL]

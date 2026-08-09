@@ -22,7 +22,7 @@ struct MockEngine: OCREngine {
     var text = "mock text"
     var delay: Duration = .zero
 
-    func recognize(imageURL: URL, config: OCRConfig) async throws -> String {
+    func recognize(imageURL: URL, settings: RecognitionSettings) async throws -> String {
         if let tracker {
             await tracker.enter()
         }
@@ -52,6 +52,7 @@ private func makeFakeImages(count: Int) throws -> (dir: URL, files: [URL]) {
     defer { try? FileManager.default.removeItem(at: dir) }
     let processor = BatchProcessor(
         engine: MockEngine(),
+        settings: RecognitionSettings(),
         config: OCRConfig(),
         reporter: Reporter(quiet: true)
     )
@@ -72,6 +73,7 @@ private func makeFakeImages(count: Int) throws -> (dir: URL, files: [URL]) {
     config.outputDir = outDir
     let processor = BatchProcessor(
         engine: MockEngine(),
+        settings: RecognitionSettings(),
         config: config,
         reporter: Reporter(quiet: true)
     )
@@ -87,6 +89,7 @@ private func makeFakeImages(count: Int) throws -> (dir: URL, files: [URL]) {
 
     let skipProcessor = BatchProcessor(
         engine: MockEngine(),
+        settings: RecognitionSettings(),
         config: OCRConfig(),
         reporter: Reporter(quiet: true)
     )
@@ -98,6 +101,7 @@ private func makeFakeImages(count: Int) throws -> (dir: URL, files: [URL]) {
     config.overwrite = true
     let overwriteProcessor = BatchProcessor(
         engine: MockEngine(),
+        settings: RecognitionSettings(),
         config: config,
         reporter: Reporter(quiet: true)
     )
@@ -111,7 +115,7 @@ private func makeFakeImages(count: Int) throws -> (dir: URL, files: [URL]) {
     defer { try? FileManager.default.removeItem(at: dir) }
     struct FailingEngine: OCREngine {
         let failing: URL
-        func recognize(imageURL: URL, config: OCRConfig) async throws -> String {
+        func recognize(imageURL: URL, settings: RecognitionSettings) async throws -> String {
             if imageURL == failing {
                 throw OCRError.visionFailed(imageURL, message: "boom")
             }
@@ -120,6 +124,7 @@ private func makeFakeImages(count: Int) throws -> (dir: URL, files: [URL]) {
     }
     let processor = BatchProcessor(
         engine: FailingEngine(failing: files[0]),
+        settings: RecognitionSettings(),
         config: OCRConfig(),
         reporter: Reporter(quiet: true)
     )
@@ -136,6 +141,7 @@ private func makeFakeImages(count: Int) throws -> (dir: URL, files: [URL]) {
     config.jobs = 2
     let processor = BatchProcessor(
         engine: MockEngine(tracker: tracker, delay: .milliseconds(20)),
+        settings: RecognitionSettings(),
         config: config,
         reporter: Reporter(quiet: true)
     )

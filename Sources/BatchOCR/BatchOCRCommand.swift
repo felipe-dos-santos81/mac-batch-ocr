@@ -52,13 +52,13 @@ struct BatchOCRCommand: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
-        let config = try makeConfig()
+        let (config, settings) = try makeConfig()
         let files = try discoverFiles(config: config)
         if let dir = config.outputDir {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
         let reporter = Reporter(quiet: quiet, logFileURL: logFile.map { URL(fileURLWithPath: $0) })
-        let processor = BatchProcessor(engine: VisionOCREngine(), config: config, reporter: reporter)
+        let processor = BatchProcessor(engine: VisionOCREngine(), settings: settings, config: config, reporter: reporter)
         let start = ContinuousClock.now
         let summary = await processor.run(files: files)
         reporter.summary(summary, elapsed: ContinuousClock.now - start)
@@ -70,25 +70,19 @@ struct BatchOCRCommand: AsyncParsableCommand {
     private func discoverFiles(config: OCRConfig) throws -> [URL] {
         do {
             return try FileDiscovery.discover(paths: paths, recursive: config.recursive, extensions: config.extensions)
-        } catch let error as OCRError {
-            FileHandle.standardError.write(Data("Error: \(error)\n".utf8))
-            throw ExitCode(2)
+        } catch let error as DiscoveryError {
+            throw fail(String(describing: error))
         }
     }
 
-    func makeConfig() throws -> OCRConfig {
+    func makeConfig() throws -> (config: OCRConfig, settings: RecognitionSettings) {
         guard !paths.isEmpty else {
-            throw configError("No input paths given. Pass image files and/or directories.")
+            throw fail("No input paths given. Pass image files and/or directories.")
         }
         guard jobs >= 1 else {
-            throw configError("--jobs must be >= 1 (got \(jobs)).")
+            throw fail("--jobs must be >= 1 (got \(jobs)).")
         }
         var config = OCRConfig()
-        if !language.isEmpty {
-            config.languages = language
-        }
-        config.usesLanguageCorrection = languageCorrection
-        config.automaticallyDetectsLanguage = detectLanguage
         config.outputDir = outputDir.map { URL(fileURLWithPath: $0) }
         config.recursive = recursive
         config.jobs = jobs
@@ -97,10 +91,16 @@ struct BatchOCRCommand: AsyncParsableCommand {
             .map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
             .filter { !$0.isEmpty }
         config.overwrite = overwrite
-        return config
+        var settings = RecognitionSettings()
+        if !language.isEmpty {
+            settings.languages = language
+        }
+        settings.usesLanguageCorrection = languageCorrection
+        settings.automaticallyDetectsLanguage = detectLanguage
+        return (config, settings)
     }
 
-    private func configError(_ message: String) -> ExitCode {
+    private func fail(_ message: String) -> ExitCode {
         FileHandle.standardError.write(Data("Error: \(message)\n".utf8))
         return ExitCode(2)
     }
