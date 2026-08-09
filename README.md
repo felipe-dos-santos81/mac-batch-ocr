@@ -67,6 +67,8 @@ batch-ocr -r -j 8 -l pt-BR -c -o "/my/output" "/my/images"
 -v, --version                  Print version.
 ```
 
+Note: with `-r` and `-o`, images that share a base name across different subdirectories write to the same `.txt` file (last write wins).
+
 Exit codes: `0` all processed, `1` finished with per-file failures, `2` usage/config error.
 
 ## Legal Disclaimer

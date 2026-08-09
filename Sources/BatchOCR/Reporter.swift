@@ -24,7 +24,7 @@ struct Reporter: Sendable {
     func summary(_ summary: BatchSummary, elapsed: Duration) {
         let seconds = Double(elapsed.components.seconds)
             + Double(elapsed.components.attoseconds) / 1e18
-        let line = "done=\(summary.ok) skipped=\(summary.skipped) empty=\(summary.empty) failed=\(summary.failed) elapsed=\(String(format: "%.1f", seconds))s"
+        let line = "done=\(summary.ok) skipped=\(summary.skipped) empty=\(summary.empty) failed=\(summary.failed) elapsed=\(String(format: "%.1f", locale: Locale(identifier: "en_US_POSIX"), seconds))s"
         print(line)
         log("INFO", line)
     }
@@ -37,6 +37,7 @@ struct Reporter: Sendable {
     private func log(_ level: String, _ message: String) {
         guard let url = logFileURL else { return }
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         let line = "\(formatter.string(from: Date())) [\(level)] \(message)\n"
         append(line, to: url)
