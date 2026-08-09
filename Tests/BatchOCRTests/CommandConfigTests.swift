@@ -9,10 +9,10 @@ import Testing
         "-d", "-c", "-l", "pt-BR", "-l", "en-US",
         "-j", "8", "-r", "--overwrite", "-o", "/tmp/out", "img.png"
     ])
-    let config = try command.makeConfig()
-    #expect(config.automaticallyDetectsLanguage)
-    #expect(config.usesLanguageCorrection)
-    #expect(config.languages == ["pt-BR", "en-US"])
+    let (config, settings) = try command.makeConfig()
+    #expect(settings.automaticallyDetectsLanguage)
+    #expect(settings.usesLanguageCorrection)
+    #expect(settings.languages == ["pt-BR", "en-US"])
     #expect(config.jobs == 8)
     #expect(config.recursive)
     #expect(config.overwrite)
@@ -21,10 +21,10 @@ import Testing
 
 @Test func defaultsMatchLegacyScript() throws {
     let command = try BatchOCRCommand.parse(["img.png"])
-    let config = try command.makeConfig()
-    #expect(config.languages == ["en"])
-    #expect(!config.usesLanguageCorrection)
-    #expect(!config.automaticallyDetectsLanguage)
+    let (config, settings) = try command.makeConfig()
+    #expect(settings.languages == ["en"])
+    #expect(!settings.usesLanguageCorrection)
+    #expect(!settings.automaticallyDetectsLanguage)
     #expect(config.jobs == 4)
     #expect(!config.overwrite)
     #expect(config.extensions == ["png", "jpg", "jpeg", "tif", "tiff", "heic", "webp"])
