@@ -6,7 +6,7 @@ struct BatchOCRCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "batch-ocr",
         abstract: "Batch OCR images using the Apple Vision framework, writing one .txt per image.",
-        version: "0.1.0"
+        version: "1.0.0"
     )
 
     @Argument(help: "Image files and/or directories to process.")

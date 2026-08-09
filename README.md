@@ -1,15 +1,75 @@
 # Batch Processing of Images to do OCR on macOS
 
-Apple Script used as a helper to process an image file and writing the recognized text to a text file.
-The recognized text is written to a text file with the same name as the image file but with a .txt extension.
+`batch-ocr` is a native Swift command-line tool that recognizes text in images using the
+Apple Vision framework and writes the recognized text to a `.txt` file with the same name
+as each image. It processes single files or whole directories (optionally recursive),
+runs OCR tasks in parallel, and skips images that already have output.
 
-The script uses the Vision framework to recognize text in the image.
+The original AppleScript helper, `process_image.scpt`, is kept in this repository as legacy.
 
-> IMPORTANT: This script runs only on macOS 10.13+ <br>
-> Tested on macOS Sonoma 14.6+ <br>
+> IMPORTANT: Runs on macOS 13+ (Ventura or newer). Built with Swift 6. <br>
 > _Script inspired by [this](https://www.macscripter.net/t/image-png-to-text-through-applescript/74490/27) thread_ <br>
 
-##	Legal Disclaimer
+## Build
+
+```shell
+git clone https://github.com/felipe-dos-santos81/mac-batch-ocr.git
+cd mac-batch-ocr
+swift build -c release
+# binary: .build/release/batch-ocr
+```
+
+> Note: `swift test` requires the Testing framework — full Xcode works out of the box; Command-Line-Tools-only setups may need the framework symlinked into the CLT SDK.
+
+## Makefile
+
+Common targets: `make build`, `make test`, `make release`, `make install`, `make run ARGS="--help"`, `make clean`, `make help`.
+
+## Usage
+
+### Help
+
+```shell
+batch-ocr --help
+```
+
+### Single image
+
+```shell
+batch-ocr "/my/images/image.png"
+```
+
+### Directory (batch)
+
+```shell
+batch-ocr "/my/images"
+```
+
+### Recursive, parallel, custom languages and output folder
+
+```shell
+batch-ocr -r -j 8 -l pt-BR -c -o "/my/output" "/my/images"
+```
+
+### Flags
+
+```
+-d, --detect-language          Automatically detect the language. Default is disabled.
+-l, --language <code>          Recognition language, repeatable (BCP-47, e.g. en-US). Default: en.
+-c, --language-correction      Enable language correction. Default is disabled.
+-o, --output-dir <dir>         Write all .txt outputs into this directory.
+-r, --recursive                Recurse into subdirectories.
+-j, --jobs <n>                 Max concurrent OCR tasks. Default: 4.
+    --extensions <csv>         Image extensions to include. Default: png,jpg,jpeg,tif,tiff,heic,webp.
+    --overwrite                Re-OCR images even if a non-empty .txt output already exists.
+    --log-file <path>          Append leveled log lines to this file.
+-q, --quiet                    Suppress per-file progress lines.
+-v, --version                  Print version.
+```
+
+Exit codes: `0` all processed, `1` finished with per-file failures, `2` usage/config error.
+
+## Legal Disclaimer
 
 This script is provided “as-is” without any warranty, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, or non-infringement.
 
@@ -21,44 +81,19 @@ macOS and Vision are trademarks of Apple Inc., registered in the U.S. and other 
 
 All other trademarks and service marks are the property of their respective owners.
 
+## Legacy AppleScript (process_image.scpt)
 
-## Usage:
-
-### Help
-
-```shell
-osascript /my/script/process_image.scpt --help
-```
-
-```
-Used to process an image file and writing the recognized text to a text file.
-The recognized text is written to a text file with the same name as the image file but with a .txt extension.
-
-Usage:
-osascript /path/process_image.scpt "/my/image.png"
-
-Flags:
--h, --help: Display this help message.
--d, --detect-language: Automatically detect the language. Default is disabled.
--l, --language ISO 639-1 string: Enable language correction. Default is disabled. Default is 'en'.
--c, --language-correction: Enable language correction. Default is disabled.
-```
-
-### Single image
+Single image:
 
 ```shell
 osascript /my/script/process_image.scpt "/my/images/image.png"
 ```
 
-### Multiple images
+Multiple images:
 
 ```shell
 find /my/images \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -type f -exec \
     bash -c 'p="$(realpath "{}")"; [[ ! "$p" =~ ^\./ ]] && osascript /my/script/process_image.scpt "$p" \;
 ```
-
-#### Where:
-- `/my/images` is the folder to scan for image(s)
-- `/my/script` The path this script was added
 
 Execution log is generated as `/my/script/process_image_log.txt`
